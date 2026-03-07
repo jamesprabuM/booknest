@@ -1,0 +1,10 @@
+﻿.env
+firebase_credentials.json
+__pycache__/
+*.pyc
+*.pyo
+db.sqlite3
+staticfiles/
+media/
+venv/
+.venv/
