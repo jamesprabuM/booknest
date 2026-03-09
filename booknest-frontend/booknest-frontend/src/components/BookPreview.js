@@ -5,6 +5,19 @@ import { wishlistAPI } from '../api';
 import { useNavigate } from 'react-router-dom';
 import './BookPreview.css';
 
+/* ── genre-specific accents for the trailer panel ── */
+const genreConfig = {
+  'Fiction':              { emoji: '📖', accent: '#c8622a', tagline: 'A Story Worth Living' },
+  'Mystery & Thriller':   { emoji: '🔍', accent: '#6c3483', tagline: 'Every Page Holds a Secret' },
+  'Fantasy':              { emoji: '🐉', accent: '#1a5276', tagline: 'Worlds Beyond Imagination' },
+  'Science & Technology': { emoji: '🔬', accent: '#117a65', tagline: 'Ideas That Shape Tomorrow' },
+  'Self-Help':            { emoji: '🌱', accent: '#b7950b', tagline: 'Transform Your Journey' },
+  'History':              { emoji: '🏛️', accent: '#784212', tagline: 'Echoes of the Past' },
+  'Romance':              { emoji: '💕', accent: '#c0392b', tagline: 'Love Between the Lines' },
+  "Children's Books":     { emoji: '🌈', accent: '#2e86c1', tagline: 'Magic for Young Minds' },
+};
+const defaultGenre = { emoji: '📚', accent: '#c8622a', tagline: 'Discover Something New' };
+
 export default function BookPreview({ book, onClose }) {
   const { addToCart } = useCart();
   const { isLoggedIn } = useAuth();
@@ -61,6 +74,9 @@ export default function BookPreview({ book, onClose }) {
   ][book.name?.charCodeAt(0) % 5];
 
   if (!book) return null;
+
+  const genre = genreConfig[book.category_name] || defaultGenre;
+  const descSnippet = (book.description || 'A wonderful book waiting to be explored.').slice(0, 120);
 
   return (
     <div
@@ -125,25 +141,44 @@ export default function BookPreview({ book, onClose }) {
           </div>
         </div>
 
-        {/* ── Right Panel: Video Clip ── */}
+        {/* ── Right Panel: Book Overview Trailer ── */}
         <div className="preview-video-panel">
           <div className="preview-video-inner">
-            <video
-              className="preview-video"
-              autoPlay
-              muted
-              loop
-              playsInline
-            >
+            <video className="preview-video" autoPlay muted loop playsInline>
               <source src="/videos/book-macro.mp4" type="video/mp4" />
             </video>
-            <div className="preview-video-overlay" />
-            <div className="preview-video-content">
-              <span className="preview-video-badge">✨ BookNest</span>
-              <p className="preview-video-quote">
-                "A reader lives a thousand lives before he dies."
-              </p>
-              <span className="preview-video-attr">— George R.R. Martin</span>
+            <div className="preview-video-overlay" style={{
+              background: `linear-gradient(180deg, ${genre.accent}22 0%, ${genre.accent}88 50%, ${genre.accent}dd 100%)`
+            }} />
+
+            {/* ── Cinematic Book Trailer Content ── */}
+            <div className="trailer-content">
+              {/* Top: genre badge */}
+              <div className="trailer-top">
+                <span className="trailer-genre-badge" style={{ borderColor: `${genre.accent}66` }}>
+                  {genre.emoji} {book.category_name || 'Book'}
+                </span>
+              </div>
+
+              {/* Center: animated title reveal */}
+              <div className="trailer-center">
+                <div className="trailer-line trailer-line-1" />
+                <h3 className="trailer-title">{book.name}</h3>
+                <p className="trailer-author-name">{book.author}</p>
+                <div className="trailer-line trailer-line-2" />
+              </div>
+
+              {/* Scrolling description snippet */}
+              <div className="trailer-description">
+                <p>"{descSnippet}…"</p>
+              </div>
+
+              {/* Bottom: tagline + branding */}
+              <div className="trailer-bottom">
+                <p className="trailer-tagline">{genre.tagline}</p>
+                <div className="trailer-divider" />
+                <span className="trailer-brand">BookNest</span>
+              </div>
             </div>
           </div>
         </div>
