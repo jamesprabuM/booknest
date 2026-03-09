@@ -16,15 +16,14 @@ export default function BookPreview({ book, onClose }) {
 
   const showToast = (msg) => {
     setToast(msg);
-    setTimeout(() => setToast(''), 2000);
+    setTimeout(() => setToast(''), 2200);
   };
 
   const handleClose = useCallback(() => {
     setClosing(true);
-    setTimeout(() => onClose(), 350);
+    setTimeout(() => onClose(), 400);
   }, [onClose]);
 
-  // Close on Escape key
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') handleClose(); };
     document.addEventListener('keydown', onKey);
@@ -77,54 +76,79 @@ export default function BookPreview({ book, onClose }) {
           <span>&times;</span>
         </button>
 
-        {/* Book Cover Section */}
-        <div className="preview-cover" style={{ background: coverColor }}>
-          {book.image ? (
-            <img src={book.image} alt={book.name} className="preview-cover-img" />
-          ) : (
-            <div className="preview-cover-placeholder">
-              <span className="preview-cover-icon">📖</span>
+        {/* ── Left Panel: Cover + Details ── */}
+        <div className="preview-left">
+          <div className="preview-cover" style={{ background: coverColor }}>
+            {book.image ? (
+              <img src={book.image} alt={book.name} className="preview-cover-img" />
+            ) : (
+              <div className="preview-cover-placeholder">
+                <span className="preview-cover-icon">📖</span>
+              </div>
+            )}
+            <div className="preview-cover-glow" />
+          </div>
+
+          <div className="preview-details">
+            <div className="preview-header">
+              <span className="preview-category">{book.category_name || 'Book'}</span>
+              <h2 className="preview-title">{book.name}</h2>
+              <p className="preview-author">by {book.author}</p>
             </div>
-          )}
-          <div className="preview-cover-glow" />
+
+            <p className="preview-description">
+              {book.description || 'A wonderful book waiting to be explored. Dive into the pages and discover a world of imagination, knowledge, and adventure.'}
+            </p>
+
+            <div className="preview-meta">
+              <div className="preview-price">₹{book.price}</div>
+              <span className={`preview-stock ${book.stock === 0 ? 'out' : ''}`}>
+                {book.stock === 0 ? 'Out of stock' : `${book.stock} in stock`}
+              </span>
+            </div>
+
+            <div className="preview-actions">
+              <button
+                className="btn btn-primary preview-cart-btn"
+                onClick={handleAddToCart}
+                disabled={adding || book.stock === 0}
+              >
+                {adding ? 'Adding…' : '🛒 Add to Cart'}
+              </button>
+              <button
+                className={`preview-wish-btn ${wishlisted ? 'active' : ''}`}
+                onClick={handleWishlist}
+              >
+                {wishlisted ? '❤️ Wishlisted' : '🤍 Wishlist'}
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Book Details Section */}
-        <div className="preview-details">
-          <div className="preview-header">
-            <p className="preview-author">{book.author}</p>
-            <h2 className="preview-title">{book.name}</h2>
-          </div>
-
-          <p className="preview-description">
-            {book.description || 'A wonderful book waiting to be explored. Dive into the pages and discover a world of imagination, knowledge, and adventure.'}
-          </p>
-
-          <div className="preview-meta">
-            <div className="preview-price">₹{book.price}</div>
-            <span className={`preview-stock ${book.stock === 0 ? 'out' : ''}`}>
-              {book.stock === 0 ? 'Out of stock' : `${book.stock} in stock`}
-            </span>
-          </div>
-
-          <div className="preview-actions">
-            <button
-              className="btn btn-primary preview-cart-btn"
-              onClick={handleAddToCart}
-              disabled={adding || book.stock === 0}
+        {/* ── Right Panel: Video Clip ── */}
+        <div className="preview-video-panel">
+          <div className="preview-video-inner">
+            <video
+              className="preview-video"
+              autoPlay
+              muted
+              loop
+              playsInline
             >
-              {adding ? 'Adding...' : '🛒 Add to Cart'}
-            </button>
-            <button
-              className={`preview-wish-btn ${wishlisted ? 'active' : ''}`}
-              onClick={handleWishlist}
-            >
-              {wishlisted ? '❤️ Wishlisted' : '🤍 Add to Wishlist'}
-            </button>
+              <source src="/videos/book-macro.mp4" type="video/mp4" />
+            </video>
+            <div className="preview-video-overlay" />
+            <div className="preview-video-content">
+              <span className="preview-video-badge">✨ BookNest</span>
+              <p className="preview-video-quote">
+                "A reader lives a thousand lives before he dies."
+              </p>
+              <span className="preview-video-attr">— George R.R. Martin</span>
+            </div>
           </div>
-
-          {toast && <div className="preview-toast">{toast}</div>}
         </div>
+
+        {toast && <div className="preview-toast">{toast}</div>}
       </div>
     </div>
   );

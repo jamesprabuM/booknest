@@ -12,6 +12,8 @@ export default function Home() {
   const [searchInput, setSearchInput] = useState('');
   const [activeCategory, setActiveCategory] = useState('');
   const [previewBook, setPreviewBook] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const BOOKS_PER_PAGE = 50;
 
   useEffect(() => {
     productsAPI.getCategories().then(({ data }) => setCategories(data)).catch(() => {});
@@ -19,6 +21,7 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true);
+    setCurrentPage(1);
     const params = {};
     if (search) params.search = search;
     if (activeCategory) params.category = activeCategory;
@@ -27,6 +30,17 @@ export default function Home() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [search, activeCategory]);
+
+  const totalPages = Math.ceil(books.length / BOOKS_PER_PAGE);
+  const paginatedBooks = books.slice(
+    (currentPage - 1) * BOOKS_PER_PAGE,
+    currentPage * BOOKS_PER_PAGE
+  );
+
+  const goToPage = (page) => {
+    setCurrentPage(page);
+    document.querySelector('.page-content')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -149,7 +163,10 @@ export default function Home() {
               : 'All Books'}
           </h2>
           {!loading && (
-            <span className="results-count">{books.length} book{books.length !== 1 ? 's' : ''}</span>
+            <span className="results-count">
+              {books.length} book{books.length !== 1 ? 's' : ''}
+              {totalPages > 1 && ` · Page ${currentPage} of ${totalPages}`}
+            </span>
           )}
         </div>
 
@@ -166,11 +183,57 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className="books-grid">
-            {books.map((book) => (
-              <BookCard key={book.product_id} book={book} onPreview={setPreviewBook} />
-            ))}
-          </div>
+          <>
+            <div className="books-grid">
+              {paginatedBooks.map((book) => (
+                <BookCard key={book.product_id} book={book} onPreview={setPreviewBook} />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  className="page-btn page-prev"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  ← Previous
+                </button>
+
+                <div className="page-numbers">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          className={`page-num ${page === currentPage ? 'active' : ''}`}
+                          onClick={() => goToPage(page)}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (page === currentPage - 2 || page === currentPage + 2) {
+                      return <span key={page} className="page-ellipsis">…</span>;
+                    }
+                    return null;
+                  })}
+                </div>
+
+                <button
+                  className="page-btn page-next"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
