@@ -1,0 +1,74 @@
+.orders-list { display: flex; flex-direction: column; gap: 12px; }
+.order-card {
+  display: flex;
+  align-items: center;
+  padding: 20px 24px;
+  gap: 20px;
+  transition: all var(--transition);
+}
+.order-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.order-card-left { flex: 1; }
+.order-id { font-weight: 600; font-size: 0.9rem; color: var(--ink); margin-bottom: 4px; font-family: monospace; }
+.order-date { font-size: 0.8rem; color: var(--ink-muted); }
+.order-card-mid { flex-shrink: 0; }
+.order-card-right { text-align: right; flex-shrink: 0; }
+.order-amount { font-weight: 600; font-size: 1rem; margin-bottom: 4px; color: var(--ink); }
+.view-link { font-size: 0.8rem; color: var(--accent); }
+
+.order-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+.order-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
+}
+.od-section { padding: 24px; }
+.od-section h2 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.od-items { display: flex; flex-direction: column; gap: 10px; }
+.od-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+}
+.od-item-row:last-of-type { border-bottom: none; padding-bottom: 0; }
+.od-item-info { display: flex; flex-direction: column; gap: 2px; }
+.od-item-name { color: var(--ink); font-weight: 500; }
+.od-item-qty { color: var(--ink-muted); font-size: 0.8rem; }
+.od-item-price { font-weight: 600; }
+.od-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 1rem;
+  padding-top: 12px;
+  border-top: 2px solid var(--border);
+}
+.od-address { font-size: 0.875rem; color: var(--ink-light); line-height: 1.8; }
+.od-address strong { color: var(--ink); font-size: 0.95rem; }
+.od-info-rows { display: flex; flex-direction: column; gap: 12px; }
+.od-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+}
+.od-info-row span:first-child { color: var(--ink-muted); }
+.od-info-row span:last-child { font-weight: 500; color: var(--ink); }
+
+@media (max-width: 768px) {
+  .order-detail-layout { grid-template-columns: 1fr; }
+  .order-card { flex-wrap: wrap; }
+}

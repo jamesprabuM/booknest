@@ -8,3 +8,4 @@ staticfiles/
 media/
 venv/
 .venv/
+node_modules/

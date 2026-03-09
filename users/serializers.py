@@ -33,7 +33,7 @@ class RegisterSerializer(serializers.Serializer):
     username  = serializers.CharField(max_length=150)
     email     = serializers.EmailField()
     password  = serializers.CharField(write_only=True, min_length=8)
-    phone     = serializers.CharField(max_length=15, required=False, default="")
+    phone     = serializers.CharField(max_length=15, required=False, allow_blank=True, default="")
 
     def validate_email(self, value):
         """Ensure email is not already registered."""
@@ -106,15 +106,8 @@ class BookNestTokenObtainSerializer(serializers.Serializer):
         if not check_password(password, user_data.get("password", "")):
             raise serializers.ValidationError("Invalid email or password.")
 
-        # Build a lightweight object so RefreshToken can use USER_ID_FIELD
-        class _User:
-            pass
-
-        u         = _User()
-        u.user_id = user_id
-
-        refresh = RefreshToken.for_user(u)
-        # SimpleJWT uses USER_ID_CLAIM; set it explicitly
+        # Build token directly without ORM user (Firestore-based auth)
+        refresh = RefreshToken()
         refresh["user_id"] = user_id
 
         return {

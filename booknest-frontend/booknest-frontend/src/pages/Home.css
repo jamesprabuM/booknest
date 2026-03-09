@@ -1,0 +1,101 @@
+.hero {
+  background: linear-gradient(135deg, #faf3ec 0%, #f5ede0 50%, #faf8f4 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 64px 0 48px;
+}
+.hero-eyebrow {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: 3.2rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+.hero-title em {
+  color: var(--accent);
+  font-style: italic;
+}
+.hero-subtitle {
+  color: var(--ink-light);
+  font-size: 1.05rem;
+  margin-bottom: 32px;
+  max-width: 480px;
+}
+.search-form {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  padding: 6px 6px 6px 18px;
+  max-width: 560px;
+  box-shadow: var(--shadow-md);
+  gap: 8px;
+}
+.search-form:focus-within { border-color: var(--accent); }
+.search-icon { font-size: 1rem; flex-shrink: 0; }
+.search-input {
+  flex: 1;
+  border: none;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: transparent;
+  outline: none;
+}
+.search-btn { border-radius: 40px; padding: 8px 20px; }
+
+.page-content { padding-top: 40px; }
+
+.categories-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 36px;
+}
+.cat-pill {
+  padding: 7px 16px;
+  border-radius: 40px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-light);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.cat-pill:hover { border-color: var(--accent); color: var(--accent); }
+.cat-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.results-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.results-count {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 2rem; }
+  .books-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+}

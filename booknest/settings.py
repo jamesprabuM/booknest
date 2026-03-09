@@ -22,12 +22,11 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",
-    # Third-party
+    "django.contrib.auth",
     "rest_framework",
     "rest_framework_simplejwt",
-    "rest_framework_simplejwt.token_blacklist",  # for logout / token revocation
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
-    # Project apps
     "firebase_config",
     "authentication",
     "users",
