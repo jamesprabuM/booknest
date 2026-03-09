@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { productsAPI } from '../api';
 import BookCard from '../components/BookCard';
+import BookPreview from '../components/BookPreview';
 import './Home.css';
 
 export default function Home() {
@@ -10,6 +11,7 @@ export default function Home() {
   const [search, setSearch]         = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [activeCategory, setActiveCategory] = useState('');
+  const [previewBook, setPreviewBook] = useState(null);
 
   useEffect(() => {
     productsAPI.getCategories().then(({ data }) => setCategories(data)).catch(() => {});
@@ -33,9 +35,23 @@ export default function Home() {
 
   return (
     <div className="home">
-      {/* Hero */}
+      {/* Hero with Background Video */}
       <div className="hero">
-        <div className="container">
+        <div className="hero-video-wrap">
+          <video
+            className="hero-video"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster=""
+          >
+            <source src="/videos/hero-bg.mp4" type="video/mp4" />
+          </video>
+          <div className="hero-video-overlay" />
+        </div>
+
+        <div className="container hero-content">
           <p className="hero-eyebrow">Welcome to BookNest</p>
           <h1 className="hero-title">
             Find your next<br />
@@ -57,6 +73,49 @@ export default function Home() {
             />
             <button type="submit" className="btn btn-primary search-btn">Search</button>
           </form>
+        </div>
+      </div>
+
+      {/* Featured Video Showcase */}
+      <div className="video-showcase">
+        <div className="container">
+          <div className="showcase-grid">
+            <div className="showcase-text">
+              <span className="showcase-badge">✨ Discover</span>
+              <h2 className="showcase-title">Every page tells<br />a <em>story</em></h2>
+              <p className="showcase-desc">
+                Explore thousands of handpicked books across every genre.
+                From timeless classics to modern bestsellers — your next
+                adventure is just a click away.
+              </p>
+              <div className="showcase-stats">
+                <div className="stat-item">
+                  <span className="stat-number">{books.length}+</span>
+                  <span className="stat-label">Books</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">{categories.length}</span>
+                  <span className="stat-label">Genres</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">24/7</span>
+                  <span className="stat-label">Access</span>
+                </div>
+              </div>
+            </div>
+            <div className="showcase-video-wrap">
+              <video
+                className="showcase-video"
+                autoPlay
+                muted
+                loop
+                playsInline
+              >
+                <source src="/videos/book-macro.mp4" type="video/mp4" />
+              </video>
+              <div className="showcase-video-frame" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -109,11 +168,16 @@ export default function Home() {
         ) : (
           <div className="books-grid">
             {books.map((book) => (
-              <BookCard key={book.product_id} book={book} />
+              <BookCard key={book.product_id} book={book} onPreview={setPreviewBook} />
             ))}
           </div>
         )}
       </div>
+
+      {/* Book Preview Modal */}
+      {previewBook && (
+        <BookPreview book={previewBook} onClose={() => setPreviewBook(null)} />
+      )}
     </div>
   );
 }

@@ -1,11 +1,21 @@
+@keyframes navSlideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
 .navbar {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(232,227,219,0.6);
   height: var(--nav-height);
+  animation: navSlideDown 0.5s cubic-bezier(0.16,1,0.3,1);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.navbar:hover {
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.04);
 }
 .navbar-inner {
   display: flex;
@@ -26,6 +36,13 @@
   font-weight: 700;
   color: var(--ink);
   letter-spacing: -0.02em;
+  transition: color 0.3s ease;
+}
+.navbar-logo:hover .logo-text {
+  color: var(--accent);
+}
+.navbar-logo:hover .logo-icon {
+  animation: breathe 0.6s ease;
 }
 .navbar-links {
   display: flex;
@@ -39,11 +56,27 @@
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--ink-light);
-  transition: all var(--transition);
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  transform: translateX(-50%);
 }
 .nav-link:hover, .nav-link.active {
   color: var(--accent);
   background: var(--accent-light);
+}
+.nav-link:hover::after, .nav-link.active::after {
+  width: 60%;
 }
 .navbar-actions {
   display: flex;
@@ -59,9 +92,15 @@
   width: 40px; height: 40px;
   border-radius: var(--radius);
   font-size: 1.1rem;
-  transition: background var(--transition);
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
 }
-.cart-btn:hover { background: var(--accent-light); }
+.cart-btn:hover {
+  background: var(--accent-light);
+  transform: scale(1.1);
+}
+.cart-btn:active {
+  transform: scale(0.95);
+}
 .cart-btn .badge {
   position: absolute;
   top: 2px; right: 2px;
@@ -76,12 +115,17 @@
   padding: 6px 12px;
   border-radius: var(--radius);
   border: 1.5px solid var(--border);
-  background: white;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(4px);
   font-size: 0.85rem;
   color: var(--ink);
-  transition: all var(--transition);
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
 }
-.user-btn:hover { border-color: var(--accent); }
+.user-btn:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(200,98,42,0.1);
+  transform: translateY(-1px);
+}
 .user-avatar {
   width: 26px; height: 26px;
   border-radius: 50%;
@@ -99,17 +143,19 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: white;
-  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(232,227,219,0.5);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.04);
   min-width: 180px;
   overflow: hidden;
-  animation: fadeDown 0.15s ease;
+  animation: dropdownReveal 0.25s cubic-bezier(0.16,1,0.3,1);
+  transform-origin: top right;
 }
-@keyframes fadeDown {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes dropdownReveal {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 .dropdown-item {
   display: flex;
@@ -122,9 +168,12 @@
   background: none;
   border: none;
   text-align: left;
-  transition: background var(--transition);
+  transition: all 0.25s ease;
 }
-.dropdown-item:hover { background: var(--cream); }
+.dropdown-item:hover {
+  background: var(--cream);
+  padding-left: 20px;
+}
 .dropdown-item.danger { color: var(--error); }
 .dropdown-item.danger:hover { background: #fdf0ef; }
 .dropdown-divider { height: 1px; background: var(--border-light); }

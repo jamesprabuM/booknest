@@ -5,7 +5,7 @@ import { wishlistAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
 import './BookCard.css';
 
-export default function BookCard({ book }) {
+export default function BookCard({ book, onPreview }) {
   const { addToCart } = useCart();
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ export default function BookCard({ book }) {
   ][book.name?.charCodeAt(0) % 5];
 
   return (
-    <div className="book-card" onClick={() => navigate(`/books/${book.product_id}`)}>
+    <div className="book-card" onClick={() => onPreview ? onPreview(book) : navigate(`/books/${book.product_id}`)}>
       {/* Cover */}
       <div className="book-cover" style={{ background: coverColor }}>
         {book.image

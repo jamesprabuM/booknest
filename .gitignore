@@ -9,3 +9,4 @@ media/
 venv/
 .venv/
 node_modules/
+*.mp4
