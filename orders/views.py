@@ -88,9 +88,12 @@ class CheckoutView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             prod = prod_doc.to_dict()
-            if prod.get("stock", 0) < quantity:
+            current_stock = prod.get("stock", 0)
+            if not isinstance(current_stock, (int, float)):
+                current_stock = 0
+            if current_stock < quantity:
                 return Response(
-                    {"error": f"'{prod['name']}' only has {prod['stock']} copies left."},
+                    {"error": f"'{prod['name']}' only has {current_stock} copies left."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -129,9 +132,6 @@ class CheckoutView(APIView):
                 "price":         item["price"],
             })
             # Decrement stock
-            db.collection(Collections.PRODUCTS).document(item["product_id"]).update(
-                {"stock": db.field_path("stock")}  # handled below properly
-            )
             prod_ref = db.collection(Collections.PRODUCTS).document(item["product_id"])
             prod_snap = prod_ref.get().to_dict()
             prod_ref.update({"stock": prod_snap["stock"] - item["quantity"]})

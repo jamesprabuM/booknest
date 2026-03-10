@@ -106,7 +106,9 @@ export default function Checkout() {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to place order.');
+      console.error('Checkout error:', err.response?.status, err.response?.data, err.message);
+      const msg = err.response?.data?.error || err.response?.data?.detail || (err.response?.data && JSON.stringify(err.response.data)) || err.message || 'Failed to place order.';
+      setError(msg);
     } finally {
       setPlacing(false);
     }

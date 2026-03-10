@@ -52,6 +52,11 @@ pip install -r requirements.txt
 4. Go to **Project Settings → Service Accounts → Generate new private key**
 5. Save the downloaded JSON as `firebase_credentials.json` in the project root
 
+> **Project ID:** `booknest-f2a44`  
+> **Service Account:** `firebase-adminsdk-fbsvc@booknest-f2a44.iam.gserviceaccount.com`
+
+⚠️ **Never commit `firebase_credentials.json` to version control.** It is already listed in `.gitignore`.
+
 ### 3. Configure Environment
 
 ```bash
@@ -63,7 +68,7 @@ Edit `.env`:
 SECRET_KEY=your-long-random-secret-key
 DEBUG=True
 FIREBASE_CREDENTIALS_PATH=firebase_credentials.json
-FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+FIREBASE_STORAGE_BUCKET=booknest-f2a44.appspot.com
 RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
 RAZORPAY_KEY_SECRET=your_razorpay_secret
 CORS_ALLOWED_ORIGINS=http://localhost:3000
