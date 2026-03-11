@@ -8,6 +8,7 @@ export default function Home() {
   const [books, setBooks]           = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState('');
   const [search, setSearch]         = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [activeCategory, setActiveCategory] = useState('');
@@ -21,13 +22,18 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true);
+    setError('');
     setCurrentPage(1);
     const params = {};
     if (search) params.search = search;
     if (activeCategory) params.category = activeCategory;
     productsAPI.getAll(params)
-      .then(({ data }) => setBooks(data))
-      .catch(() => {})
+      .then(({ data }) => setBooks(Array.isArray(data) ? data : []))
+      .catch((err) => {
+        console.error('Failed to fetch books:', err);
+        setError(err.response ? `Server error (${err.response.status})` : 'Could not connect to server. Make sure the backend is running.');
+        setBooks([]);
+      })
       .finally(() => setLoading(false));
   }, [search, activeCategory]);
 
@@ -173,6 +179,15 @@ export default function Home() {
         {/* Books Grid */}
         {loading ? (
           <div className="loading-center"><div className="spinner" /></div>
+        ) : error ? (
+          <div className="empty-state">
+            <div className="empty-icon">⚠️</div>
+            <h3>Unable to load books</h3>
+            <p>{error}</p>
+            <button className="btn btn-secondary" onClick={() => { setError(''); setSearch(''); setSearchInput(''); setActiveCategory(''); }}>
+              Retry
+            </button>
+          </div>
         ) : books.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">📭</div>
