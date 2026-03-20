@@ -276,3 +276,109 @@ Response: { "message": "Payment successful.", "payment_id": "..." }
 | **Admin** | + All of the above + Manage books/categories, Update order status, View all orders |
 
 Admin accounts are created by setting `is_admin: true` in Firestore or running the seed script.
+
+
+
+
+
+
+
+Book Store API: Endpoint List
+🔑 1. Authentication & Identity
+POST  /auth/register/ — New user signup
+
+POST  /auth/login/ — Get access/refresh tokens
+
+POST  /auth/logout/ — Invalidate refresh token
+
+POST  /auth/token/refresh/ — Get new access token
+
+👤 2. User Profile Management
+GET   /auth/profile/ — View your account details
+
+PATCH /auth/profile/ — Edit username or phone
+
+POST  /auth/profile/image/ — Upload/Update avatar
+
+POST  /auth/change-password/ — Security update
+
+📍 3. Address Book
+GET   /auth/addresses/ — List all saved addresses
+
+POST  /auth/addresses/ — Create new address
+
+GET   /auth/addresses// — View specific address
+
+PATCH /auth/addresses// — Update address details
+
+DELETE/auth/addresses// — Remove address
+
+📁 4. Categories (Library Structure)
+GET   /categories/ — View all book genres
+
+POST  /categories/ — (Admin) Create new category
+
+GET   /categories// — View books in a category
+
+PATCH /categories// — (Admin) Edit category name
+
+DELETE/categories// — (Admin) Remove category
+
+📖 5. Products (Books)
+GET   /products/ — List all books (Search/Filter)
+
+POST  /products/ — (Admin) Add new book
+
+GET   /products// — Full book details/description
+
+PATCH /products// — (Admin) Edit book info
+
+DELETE/products// — (Admin) Delete book
+
+POST  /products//image/ — (Admin) Upload book cover
+
+🛒 6. Shopping Cart
+GET   /cart/ — View items and subtotal
+
+POST  /cart/items/ — Add book to cart
+
+PATCH /cart/items// — Adjust quantity
+
+DELETE/cart/items// — Remove item from cart
+
+DELETE/cart/clear/ — Reset/Empty cart
+
+❤️ 7. Wishlist
+GET   /wishlist/ — View saved-for-later books
+
+POST  /wishlist/items/ — Save a book to wishlist
+
+DELETE/wishlist/items// — Remove from wishlist
+
+POST  /wishlist/items//move-to-cart/ — Transfer item to cart
+
+📦 8. Orders & Payments
+POST  /orders/checkout/ — Convert cart to an order
+
+GET   /orders/ — Order history (User) / All orders (Admin)
+
+GET   /orders// — Order status and receipt
+
+PATCH /orders//status/ — (Admin) Update shipping status
+
+POST  /orders//cancel/ — Cancel a pending order
+
+POST  /payments/create/ — Generate Razorpay Order
+
+POST  /payments/verify/ — Confirm payment signature
+
+GET   /payments/<order_id>/ — View transaction details
+
+💡 Quick Summary for Mam:
+Total Endpoints: 37
+
+Public Access: Registration, Login, Category/Product viewing.
+
+User Access: Profile, Cart, Wishlist, Orders, Payments.
+
+Admin Access: Full CRUD (Create, Read, Update, Delete) on Products and Categories.*/

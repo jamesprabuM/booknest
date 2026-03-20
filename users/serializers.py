@@ -118,6 +118,7 @@ class BookNestTokenObtainSerializer(serializers.Serializer):
                 "username": user_data.get("username"),
                 "email":    user_data.get("email"),
                 "phone":    user_data.get("phone"),
+                "is_admin": user_data.get("is_admin", False),
             },
         }
 

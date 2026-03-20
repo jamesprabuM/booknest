@@ -14,24 +14,27 @@ export function Login() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await login(form.email, form.password);
-      navigate('/');
-    } catch (err) {
-      const msg = err.response?.data;
-      if (typeof msg === 'object') {
-        setError(Object.values(msg).flat().join(' '));
-      } else {
-        setError('Invalid email or password.');
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setError('');
+      setLoading(true);
+      // Trim email and password before submission
+      const trimmedEmail = form.email.trim();
+      const trimmedPassword = form.password.trim();
+      try {
+        await login(trimmedEmail, trimmedPassword);
+        navigate('/');
+      } catch (err) {
+        const msg = err.response?.data;
+        if (typeof msg === 'object') {
+          setError(Object.values(msg).flat().join(' '));
+        } else {
+          setError('Invalid email or password.');
+        }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   return (
     <div className="auth-page">
@@ -105,25 +108,54 @@ export function Login() {
 // ── Register ───────────────────────────────────────────────────────────────
 export function Register() {
   const navigate  = useNavigate();
-  const { login } = useAuth();
   const [form, setForm]       = useState({ username: '', email: '', password: '', phone: '' });
   const [error, setError]     = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'username') {
+      // Allow only letters and spaces
+      const filtered = value.replace(/[^a-zA-Z\s]/g, '');
+      setForm({ ...form, [name]: filtered });
+    } else if (name === 'phone') {
+      // Allow only digits, max 10
+      const digits = value.replace(/[^0-9]/g, '').slice(0, 10);
+      setForm({ ...form, [name]: digits });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (form.password.length < 8) {
+    setSuccess('');
+    // Trim all fields before submission
+    const trimmedForm = {
+      username: form.username.trim(),
+      email: form.email.trim(),
+      password: form.password.trim(),
+      phone: form.phone.trim(),
+    };
+    if (trimmedForm.username.length < 2) {
+      setError('Name must be at least 2 characters.');
+      return;
+    }
+    if (trimmedForm.phone && trimmedForm.phone.length !== 10) {
+      setError('Phone number must be exactly 10 digits.');
+      return;
+    }
+    if (trimmedForm.password.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
     }
     setLoading(true);
     try {
-      await authAPI.register(form);
-      await login(form.email, form.password);
-      navigate('/');
+      await authAPI.register(trimmedForm);
+      setSuccess('Account created successfully! Redirecting to login...');
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       const msg = err.response?.data;
       if (typeof msg === 'object') {
@@ -165,6 +197,7 @@ export function Register() {
           </div>
 
           {error && <div className="auth-error">{error}</div>}
+          {success && <div className="auth-success">{success}</div>}
 
           <form onSubmit={handleSubmit}>
             <div className="auth-field" style={{ animationDelay: '0.15s' }}>
@@ -176,6 +209,8 @@ export function Register() {
                 placeholder="Priya Sharma"
                 value={form.username}
                 onChange={handleChange}
+                pattern="[A-Za-z\s]+"
+                title="Only letters and spaces allowed"
                 required
               />
             </div>
@@ -200,6 +235,10 @@ export function Register() {
                 placeholder="9876543210"
                 value={form.phone}
                 onChange={handleChange}
+                maxLength={10}
+                pattern="[0-9]{10}"
+                title="Phone number must be exactly 10 digits"
+                inputMode="numeric"
               />
             </div>
             <div className="auth-field" style={{ animationDelay: '0.36s' }}>

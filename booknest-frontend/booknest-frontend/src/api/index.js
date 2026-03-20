@@ -53,8 +53,15 @@ export const authAPI = {
 export const productsAPI = {
   getAll:      (params) => api.get('/products/', { params }),
   getOne:      (id)     => api.get(`/products/${id}/`),
-  getCategories: ()     => api.get('/categories/'),
-};
+  getCategories: ()     => api.get('/categories/'),  create:      (data)   => api.post('/products/', data),
+  update:      (id, data) => api.patch(`/products/${id}/`, data),
+  remove:      (id)     => api.delete(`/products/${id}/`),
+  uploadImage: (id, formData) => api.post(`/products/${id}/image/`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  createCategory: (data) => api.post('/categories/', data),
+  updateCategory: (id, data) => api.patch(`/categories/${id}/`, data),
+  deleteCategory: (id) => api.delete(`/categories/${id}/`),};
 
 // ── Cart ───────────────────────────────────────────────────────────────────
 export const cartAPI = {

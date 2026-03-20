@@ -52,7 +52,7 @@ def seed():
         category_ids[cat["category_name"]] = cat_id
         print(f"  ✔ Category: {cat['category_name']}")
 
-    # ── 2. Products (Books) — 500 books ────────────────────────────────────
+    # ── 2. Products (Books) ────────────────────────────────────────────────
     books = [
         # ── Fiction ─────────────────────────────────────────────────────
         {"name": "The Midnight Library", "author": "Matt Haig", "description": "A novel about all the lives you could have lived.", "price": 399.0, "stock": 50, "category": "Fiction", "image": "https://covers.openlibrary.org/b/isbn/9780525559474-L.jpg"},
@@ -574,7 +574,7 @@ def seed():
             "description": book["description"],
             "price":       book["price"],
             "stock":       book["stock"],
-            "image":       book.get("image", ""),
+            "image":       "",
             "created_at":  now,
         })
         print(f"  ✔ Book: {book['name']} by {book['author']}")

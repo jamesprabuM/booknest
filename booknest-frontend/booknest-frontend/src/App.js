@@ -12,6 +12,7 @@ import Checkout from './pages/Checkout';
 import { Orders, OrderDetail } from './pages/Orders';
 import Profile from './pages/Profile';
 import Wishlist from './pages/Wishlist';
+import Admin from './pages/Admin';
 import './styles/globals.css';
 
 function AppLayout({ children }) {
@@ -43,6 +44,7 @@ export default function App() {
               <Route path="/orders"   element={<ProtectedRoute><Orders /></ProtectedRoute>} />
               <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
               <Route path="/profile"  element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/admin"    element={<ProtectedRoute><Admin /></ProtectedRoute>} />
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />

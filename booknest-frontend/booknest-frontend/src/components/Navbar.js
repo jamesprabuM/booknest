@@ -35,6 +35,9 @@ export default function Navbar() {
             <>
               <Link to="/wishlist" className={`nav-link ${isActive('/wishlist') ? 'active' : ''}`}>Wishlist</Link>
               <Link to="/orders" className={`nav-link ${isActive('/orders') ? 'active' : ''}`}>Orders</Link>
+              {user?.is_admin && (
+                <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>Admin</Link>
+              )}
             </>
           )}
         </div>
@@ -66,6 +69,11 @@ export default function Navbar() {
                     <Link to="/orders" className="dropdown-item" onClick={() => setMenuOpen(false)}>
                       📦 My Orders
                     </Link>
+                    {user?.is_admin && (
+                      <Link to="/admin" className="dropdown-item" onClick={() => setMenuOpen(false)}>
+                        ⚙️ Admin Panel
+                      </Link>
+                    )}
                     <div className="dropdown-divider" />
                     <button className="dropdown-item danger" onClick={handleLogout}>
                       🚪 Logout
