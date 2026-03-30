@@ -9,20 +9,66 @@ export function AuthProvider({ children }) {
 
   // Load user on mount if token exists
   useEffect(() => {
+    let active = true;
+
     const token = localStorage.getItem('access_token');
     const saved = localStorage.getItem('user');
-    if (token && saved) {
-      setUser(JSON.parse(saved));
-    }
-    setLoading(false);
+    let savedUser = null;
+    const boot = async () => {
+      if (!token) {
+        if (active) setLoading(false);
+        return;
+      }
+
+      if (saved) {
+        try {
+          savedUser = JSON.parse(saved);
+          if (active) setUser(savedUser);
+        } catch {
+          localStorage.removeItem('user');
+        }
+      }
+
+      // Always fetch latest profile so role flags like is_admin stay in sync.
+      try {
+        const { data } = await authAPI.profile();
+        const mergedUser = {
+          ...(savedUser || {}),
+          ...data,
+        };
+        localStorage.setItem('user', JSON.stringify(mergedUser));
+        if (active) setUser(mergedUser);
+      } catch {
+        // Keep existing local session on transient failures.
+        if (!savedUser) {
+          localStorage.clear();
+          if (active) setUser(null);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    boot();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const login = async (email, password) => {
     const { data } = await authAPI.login({ email, password });
     localStorage.setItem('access_token', data.access);
     localStorage.setItem('refresh_token', data.refresh);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setUser(data.user);
+    try {
+      const { data: profile } = await authAPI.profile();
+      const mergedUser = { ...data.user, ...profile };
+      localStorage.setItem('user', JSON.stringify(mergedUser));
+      setUser(mergedUser);
+    } catch {
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+    }
     return data;
   };
 

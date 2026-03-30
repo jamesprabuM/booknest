@@ -38,7 +38,9 @@ class CategoryListCreateView(APIView):
     def get(self, request):
         docs = db.collection(Collections.CATEGORIES).get()
         categories = [{**d.to_dict(), "category_id": d.id} for d in docs]
-        return Response(categories)
+        response = Response(categories)
+        response["Cache-Control"] = "public, max-age=300"
+        return response
 
     def post(self, request):
         if not is_admin(request):
@@ -82,7 +84,7 @@ class CategoryDetailView(APIView):
         category = self._get_category(category_id)
         if category is None:
             return Response({"error": "Category not found."}, status=status.HTTP_404_NOT_FOUND)
-        serializer = CategorySerializer(data=request.data, partial=True)
+        serializer = CategorySerializer(data=request.data, partial=True, context={"category_id": category_id})
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         updated = serializer.update(category_id, serializer.validated_data)
@@ -133,7 +135,9 @@ class ProductListCreateView(APIView):
                 or search in p.get("author", "").lower()
             ]
 
-        return Response(products)
+        response = Response(products)
+        response["Cache-Control"] = "public, max-age=60"
+        return response
 
     def post(self, request):
         if not is_admin(request):
@@ -177,7 +181,11 @@ class ProductDetailView(APIView):
         product = self._get_product(product_id)
         if product is None:
             return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
-        serializer = ProductSerializer(data=request.data, partial=True)
+        serializer = ProductSerializer(
+            data=request.data,
+            partial=True,
+            context={"product_id": product_id, "existing_product": product},
+        )
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         updated = serializer.update(product_id, serializer.validated_data)

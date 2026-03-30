@@ -1,5 +1,32 @@
 import axios from 'axios';
 
+const CACHE_TTL = {
+  categories: 5 * 60 * 1000,
+  products: 60 * 1000,
+};
+
+const cacheStore = {
+  categories: null,
+  products: new Map(),
+};
+
+const buildProductsCacheKey = (params = {}) => {
+  const sortedEntries = Object.entries(params || {})
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .sort(([a], [b]) => a.localeCompare(b));
+  return JSON.stringify(sortedEntries);
+};
+
+const isFresh = (entry, ttl) => Boolean(entry) && Date.now() - entry.ts < ttl;
+
+const clearProductsCache = () => {
+  cacheStore.products.clear();
+};
+
+const clearCategoriesCache = () => {
+  cacheStore.categories = null;
+};
+
 // ── Axios Instance ─────────────────────────────────────────────────────────
 const api = axios.create({
   baseURL: '/api/v1',
@@ -51,17 +78,64 @@ export const authAPI = {
 
 // ── Products ───────────────────────────────────────────────────────────────
 export const productsAPI = {
-  getAll:      (params) => api.get('/products/', { params }),
+  getAll: async (params) => {
+    const key = buildProductsCacheKey(params);
+    const cached = cacheStore.products.get(key);
+    if (isFresh(cached, CACHE_TTL.products)) {
+      return { data: cached.data };
+    }
+
+    const response = await api.get('/products/', { params });
+    cacheStore.products.set(key, { data: response.data, ts: Date.now() });
+    return response;
+  },
   getOne:      (id)     => api.get(`/products/${id}/`),
-  getCategories: ()     => api.get('/categories/'),  create:      (data)   => api.post('/products/', data),
-  update:      (id, data) => api.patch(`/products/${id}/`, data),
-  remove:      (id)     => api.delete(`/products/${id}/`),
+  getCategories: async () => {
+    if (isFresh(cacheStore.categories, CACHE_TTL.categories)) {
+      return { data: cacheStore.categories.data };
+    }
+
+    const response = await api.get('/categories/');
+    cacheStore.categories = { data: response.data, ts: Date.now() };
+    return response;
+  },
+  create: async (data) => {
+    const response = await api.post('/products/', data);
+    clearProductsCache();
+    return response;
+  },
+  update: async (id, data) => {
+    const response = await api.patch(`/products/${id}/`, data);
+    clearProductsCache();
+    return response;
+  },
+  remove: async (id) => {
+    const response = await api.delete(`/products/${id}/`);
+    clearProductsCache();
+    return response;
+  },
   uploadImage: (id, formData) => api.post(`/products/${id}/image/`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  createCategory: (data) => api.post('/categories/', data),
-  updateCategory: (id, data) => api.patch(`/categories/${id}/`, data),
-  deleteCategory: (id) => api.delete(`/categories/${id}/`),};
+  createCategory: async (data) => {
+    const response = await api.post('/categories/', data);
+    clearCategoriesCache();
+    clearProductsCache();
+    return response;
+  },
+  updateCategory: async (id, data) => {
+    const response = await api.patch(`/categories/${id}/`, data);
+    clearCategoriesCache();
+    clearProductsCache();
+    return response;
+  },
+  deleteCategory: async (id) => {
+    const response = await api.delete(`/categories/${id}/`);
+    clearCategoriesCache();
+    clearProductsCache();
+    return response;
+  },
+};
 
 // ── Cart ───────────────────────────────────────────────────────────────────
 export const cartAPI = {
@@ -86,6 +160,7 @@ export const ordersAPI = {
   getAll:   ()     => api.get('/orders/'),
   getOne:   (id)   => api.get(`/orders/${id}/`),
   cancel:   (id)   => api.post(`/orders/${id}/cancel/`),
+  updateStatus: (id, data) => api.patch(`/orders/${id}/status/`, data),
 };
 
 // ── Payments ───────────────────────────────────────────────────────────────

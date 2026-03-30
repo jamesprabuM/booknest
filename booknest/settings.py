@@ -48,14 +48,28 @@ MIDDLEWARE = [
 ROOT_URLCONF = "booknest.urls"
 WSGI_APPLICATION = "booknest.wsgi.application"
 
-# ─── Database (SQLite only for SimpleJWT token blacklist) ──────────────────
-# All business data lives in Firestore.
+# ─── Database (SQLite for local dev, PostgreSQL for production) ──────────────
+# To use PostgreSQL: install it locally, update .env with DB credentials, 
+# and uncomment the PostgreSQL section below
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# Uncomment for PostgreSQL (after installing and configuring):
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.getenv("DB_NAME", "postgres"),
+#         "USER": os.getenv("DB_USER", "postgres"),
+#         "PASSWORD": os.getenv("DB_PASSWORD", ""),
+#         "HOST": os.getenv("DB_HOST", "localhost"),
+#         "PORT": os.getenv("DB_PORT", "5432"),
+#         "CONN_MAX_AGE": 600,
+#     }
+# }
 
 # ─── Static / Media ────────────────────────────────────────────────────────
 STATIC_URL = "/static/"
@@ -99,8 +113,22 @@ SIMPLE_JWT = {
 }
 
 # ─── Firebase ──────────────────────────────────────────────────────────────
+import json
+
 FIREBASE_CREDENTIALS_PATH = os.getenv("FIREBASE_CREDENTIALS_PATH", "firebase_credentials.json")
-FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET", "")
+
+# Extract bucket name from credentials if env var not set
+_firebase_bucket = os.getenv("FIREBASE_STORAGE_BUCKET", "")
+if not _firebase_bucket and os.path.exists(FIREBASE_CREDENTIALS_PATH):
+    try:
+        with open(FIREBASE_CREDENTIALS_PATH) as f:
+            creds = json.load(f)
+            project_id = creds.get("project_id", "")
+            _firebase_bucket = f"{project_id}.appspot.com" if project_id else ""
+    except (json.JSONDecodeError, IOError):
+        pass
+
+FIREBASE_STORAGE_BUCKET = _firebase_bucket
 
 # ─── Razorpay ──────────────────────────────────────────────────────────────
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")

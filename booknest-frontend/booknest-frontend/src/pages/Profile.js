@@ -16,6 +16,76 @@ export default function Profile() {
   const [newAddr, setNewAddr] = useState({
     full_name: '', phone: '', house_no: '', street: '', city: '', state: '', pincode: '', country: 'India'
   });
+  const [formErrors, setFormErrors] = useState({});
+
+  // Validation rules
+  const validateField = (name, value) => {
+    const errors = {};
+    
+    if (!value.trim()) {
+      errors[name] = 'This field is required';
+    } else {
+      switch (name) {
+        case 'full_name':
+          if (/\d/.test(value)) {
+            errors[name] = 'Name cannot contain numbers';
+          }
+          if (value.trim().length < 2) {
+            errors[name] = 'Name must be at least 2 characters';
+          }
+          break;
+        case 'phone':
+          if (!/^\d{10}$/.test(value.replace(/\s|-/g, ''))) {
+            errors[name] = 'Phone must be 10 digits';
+          }
+          break;
+        case 'house_no':
+          if (!/^[0-9a-zA-Z\/-]+$/.test(value)) {
+            errors[name] = 'House number contains invalid characters';
+          }
+          break;
+        case 'street':
+          if (/^[0-9]+$/.test(value)) {
+            errors[name] = 'Street name contains only numbers';
+          }
+          break;
+        case 'city':
+          if (/\d/.test(value)) {
+            errors[name] = 'City cannot contain numbers';
+          }
+          break;
+        case 'state':
+          if (/\d/.test(value)) {
+            errors[name] = 'State cannot contain numbers';
+          }
+          break;
+        case 'pincode':
+          if (!/^\d{5,6}$/.test(value)) {
+            errors[name] = 'Pincode must be 5-6 digits';
+          }
+          break;
+        case 'country':
+          if (/\d/.test(value)) {
+            errors[name] = 'Country cannot contain numbers';
+          }
+          break;
+        default:
+          break;
+      }
+    }
+    
+    return errors;
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    Object.keys(newAddr).forEach((key) => {
+      const fieldErrors = validateField(key, newAddr[key]);
+      Object.assign(errors, fieldErrors);
+    });
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   useEffect(() => {
     if (user) setProfile({ username: user.username || '', phone: user.phone || '' });
@@ -29,6 +99,27 @@ export default function Profile() {
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
+    
+    // Validate username
+    if (!profile.username.trim()) {
+      showMsg('error', 'Full name is required.');
+      return;
+    }
+    if (profile.username.length < 2) {
+      showMsg('error', 'Full name must be at least 2 characters.');
+      return;
+    }
+    if (/\d/.test(profile.username)) {
+      showMsg('error', 'Full name cannot contain numbers.');
+      return;
+    }
+    
+    // Validate phone if provided
+    if (profile.phone && !/^\d{10}$/.test(profile.phone.replace(/\s|-/g, ''))) {
+      showMsg('error', 'Phone must be 10 digits.');
+      return;
+    }
+    
     setSaving(true);
     try {
       await authAPI.updateProfile(profile);
@@ -40,6 +131,13 @@ export default function Profile() {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
+    
+    // Validate new password length
+    if (pwdForm.new_password.length < 8) {
+      showMsg('error', 'New password must be at least 8 characters long.');
+      return;
+    }
+    
     setSaving(true);
     try {
       await authAPI.changePassword(pwdForm);
@@ -56,16 +154,38 @@ export default function Profile() {
     setAddresses(addresses.filter(a => a.address_id !== id));
   };
 
-  const handleAddrChange = (e) => setNewAddr({ ...newAddr, [e.target.name]: e.target.value });
+  const handleAddrChange = (e) => {
+    const { name, value } = e.target;
+    setNewAddr({ ...newAddr, [name]: value });
+    
+    // Real-time validation
+    const fieldErrors = validateField(name, value);
+    setFormErrors((prev) => {
+      const updated = { ...prev };
+      if (Object.keys(fieldErrors).length === 0) {
+        delete updated[name];
+      } else {
+        Object.assign(updated, fieldErrors);
+      }
+      return updated;
+    });
+  };
 
   const handleAddAddress = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      showMsg('error', 'Please fix the form errors before submitting.');
+      return;
+    }
+    
     setSaving(true);
     try {
       const { data } = await authAPI.addAddress(newAddr);
       setAddresses([...addresses, data]);
       setNewAddr({ full_name: '', phone: '', house_no: '', street: '', city: '', state: '', pincode: '', country: 'India' });
       setShowAddrForm(false);
+      setFormErrors({});
       showMsg('success', 'Address added successfully!');
     } catch { showMsg('error', 'Failed to save address.'); }
     finally { setSaving(false); }
@@ -198,8 +318,17 @@ export default function Profile() {
                       ].map((f) => (
                         <div key={f.name} className="form-group">
                           <label className="form-label">{f.label}</label>
-                          <input className="form-input" name={f.name} placeholder={f.placeholder}
-                            value={newAddr[f.name]} onChange={handleAddrChange} required />
+                          <input 
+                            className={`form-input ${formErrors[f.name] ? 'input-error' : ''}`}
+                            name={f.name} 
+                            placeholder={f.placeholder}
+                            value={newAddr[f.name]} 
+                            onChange={handleAddrChange} 
+                            required 
+                          />
+                          {formErrors[f.name] && (
+                            <span className="form-error">{formErrors[f.name]}</span>
+                          )}
                         </div>
                       ))}
                     </div>

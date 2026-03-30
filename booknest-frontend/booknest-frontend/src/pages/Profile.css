@@ -295,3 +295,42 @@
   .profile-layout { grid-template-columns: 1fr; }
   .profile-sidebar { position: static; }
 }
+
+/* Form Validation Styles */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.form-label {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+.form-input {
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200, 98, 42, 0.1);
+}
+.form-input.input-error {
+  border-color: #e74c3c;
+  background: rgba(231, 76, 60, 0.05);
+}
+.form-input.input-error:focus {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+.form-error {
+  font-size: 0.75rem;
+  color: #e74c3c;
+  font-weight: 500;
+  margin-top: -2px;
+}

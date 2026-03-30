@@ -10,6 +10,7 @@ export default function BookCard({ book, onPreview }) {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const [adding, setAdding] = useState(false);
+  const [buying, setBuying] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
   const [toast, setToast] = useState('');
 
@@ -40,6 +41,26 @@ export default function BookCard({ book, onPreview }) {
       setWishlisted(true);
       showToast('Added to wishlist!');
     } catch {}
+  };
+
+  const handleBuyNow = async (e) => {
+    e.stopPropagation();
+    if (!isLoggedIn) { navigate('/login'); return; }
+    setBuying(true);
+    navigate('/checkout', {
+      state: {
+        buyNowItems: [{ product_id: book.product_id, quantity: 1 }],
+        buyNowPreview: [{
+          product_id: book.product_id,
+          quantity: 1,
+          product: {
+            name: book.name,
+            price: book.price,
+          },
+        }],
+      },
+    });
+    setBuying(false);
   };
 
   const coverColor = [
@@ -76,13 +97,22 @@ export default function BookCard({ book, onPreview }) {
             {book.stock === 0 ? 'Out of stock' : `${book.stock} left`}
           </span>
         </div>
-        <button
-          className="btn btn-primary btn-add"
-          onClick={handleAddToCart}
-          disabled={adding || book.stock === 0}
-        >
-          {adding ? '...' : '+ Add to Cart'}
-        </button>
+        <div className="book-actions">
+          <button
+            className="btn btn-primary btn-add"
+            onClick={handleAddToCart}
+            disabled={adding || buying || book.stock === 0}
+          >
+            {adding ? '...' : '+ Add to Cart'}
+          </button>
+          <button
+            className="btn btn-secondary btn-buy-now"
+            onClick={handleBuyNow}
+            disabled={buying || adding || book.stock === 0}
+          >
+            {buying ? '...' : 'Buy Now'}
+          </button>
+        </div>
       </div>
 
       {toast && <div className="book-toast">{toast}</div>}

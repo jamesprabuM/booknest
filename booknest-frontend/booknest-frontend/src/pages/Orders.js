@@ -3,6 +3,34 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ordersAPI } from '../api';
 import './Orders.css';
 
+const TRACKING_STEPS = ['Order Confirmed', 'Shipped', 'Out for Delivery', 'Delivered'];
+
+function normalizeStatus(status) {
+  return (status || '').toLowerCase().trim();
+}
+
+function getDisplayTrackingStatus(status) {
+  const normalized = normalizeStatus(status);
+  if (normalized === 'pending' || normalized === 'paid') return 'Order Confirmed';
+  if (normalized === 'shipped') return 'Shipped';
+  if (normalized === 'out for delivery') return 'Out for Delivery';
+  if (normalized === 'delivered') return 'Delivered';
+  return 'Order Confirmed';
+}
+
+function getTrackingStepIndex(status) {
+  const displayStatus = getDisplayTrackingStatus(status);
+  const index = TRACKING_STEPS.indexOf(displayStatus);
+  return index === -1 ? 0 : index;
+}
+
+function getTrackingStepClass(stepIndex, currentIndex, isCancelled) {
+  if (isCancelled) return 'upcoming';
+  if (stepIndex < currentIndex) return 'complete';
+  if (stepIndex === currentIndex) return 'active';
+  return 'upcoming';
+}
+
 // ── Orders List ────────────────────────────────────────────────────────────
 export function Orders() {
   const [orders, setOrders]   = useState([]);
@@ -32,8 +60,11 @@ export function Orders() {
           </div>
         ) : (
           <div className="orders-list">
-            {orders.map((order) => (
-              <Link to={`/orders/${order.order_id}`} key={order.order_id} className="order-card card">
+            {orders.map((order) => {
+              const isCancelled = normalizeStatus(order.order_status) === 'cancelled';
+              const currentIndex = getTrackingStepIndex(order.order_status);
+              return (
+                <Link to={`/orders/${order.order_id}`} key={order.order_id} className="order-card card">
                 <div className="order-card-left">
                   <p className="order-id">Order #{order.order_id.slice(0, 8).toUpperCase()}</p>
                   <p className="order-date">{new Date(order.created_at).toLocaleDateString('en-IN', {
@@ -44,13 +75,23 @@ export function Orders() {
                   <span className={`status-pill status-${order.order_status?.toLowerCase()}`}>
                     {order.order_status}
                   </span>
+                  <div className="order-track-mini" aria-label="Order tracking">
+                    {TRACKING_STEPS.map((step, idx) => (
+                      <span
+                        key={step}
+                        className={`track-mini-dot ${getTrackingStepClass(idx, currentIndex, isCancelled)}`}
+                        title={step}
+                      />
+                    ))}
+                  </div>
                 </div>
                 <div className="order-card-right">
                   <p className="order-amount">₹{order.total_amount}</p>
                   <span className="view-link">View →</span>
                 </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
@@ -89,6 +130,10 @@ export function OrderDetail() {
   if (loading) return <div className="loading-center"><div className="spinner" /></div>;
   if (error)   return <div className="container page-wrapper"><div className="alert alert-error">{error}</div></div>;
 
+  const isCancelled = normalizeStatus(order.order_status) === 'cancelled';
+  const currentIndex = getTrackingStepIndex(order.order_status);
+  const currentDisplayStep = getDisplayTrackingStatus(order.order_status);
+
   return (
     <div className="page-wrapper">
       <div className="container">
@@ -110,14 +155,39 @@ export function OrderDetail() {
 
         <div className="order-detail-layout">
           <div>
-            {/* Items */}
+            {/* Tracking */}
             <div className="od-section card">
+              <h2>🚚 Order Tracking</h2>
+              {isCancelled ? (
+                <div className="tracking-cancelled">This order was cancelled. No further delivery updates are available.</div>
+              ) : (
+                <div className="tracking-steps" aria-label="Order progress tracker">
+                  {TRACKING_STEPS.map((step, idx) => {
+                    const state = getTrackingStepClass(idx, currentIndex, isCancelled);
+                    return (
+                      <div key={step} className={`tracking-step ${state}`}>
+                        <div className="tracking-node" />
+                        <span className="tracking-label">{step}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="tracking-note">
+                {isCancelled
+                  ? 'If this was unexpected, contact support with your order ID.'
+                  : `Latest update: ${currentDisplayStep}.`}
+              </p>
+            </div>
+
+            {/* Items */}
+            <div className="od-section card" style={{ marginTop: 20 }}>
               <h2>📚 Items Ordered</h2>
               <div className="od-items">
                 {order.items?.map((item) => (
                   <div key={item.order_item_id} className="od-item-row">
                     <div className="od-item-info">
-                      <span className="od-item-name">{item.product_id}</span>
+                      <span className="od-item-name">{item.product_name || item.product_id}</span>
                       <span className="od-item-qty">Qty: {item.quantity}</span>
                     </div>
                     <span className="od-item-price">₹{(item.price * item.quantity).toFixed(2)}</span>

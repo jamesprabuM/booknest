@@ -188,7 +188,14 @@
 .search-input::placeholder {
   color: rgba(255, 255, 255, 0.5);
 }
-.search-btn { border-radius: 40px; padding: 8px 20px; }
+.search-form .search-btn {
+  border-radius: 999px;
+  padding: 8px 20px;
+}
+
+.search-form .search-btn::after {
+  border-radius: inherit;
+}
 
 .page-content {
   padding-top: 40px;

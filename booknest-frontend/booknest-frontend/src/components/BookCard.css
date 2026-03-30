@@ -160,11 +160,30 @@
   font-size: 0.85rem;
   transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
 }
+.book-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.btn-buy-now {
+  width: 100%;
+  justify-content: center;
+  padding: 9px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(200,98,42,0.35);
+}
 .btn-add:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(200,98,42,0.25);
 }
+.btn-buy-now:hover {
+  transform: translateY(-1px);
+  border-color: rgba(200,98,42,0.55);
+}
 .btn-add:active {
+  transform: translateY(0) scale(0.98);
+}
+.btn-buy-now:active {
   transform: translateY(0) scale(0.98);
 }
 .book-toast {

@@ -20,11 +20,12 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from firebase_admin import firestore as fb_firestore
 
 from firebase_config.firebase import db, Collections
 
 
-ORDER_STATUSES = ["Pending", "Paid", "Shipped", "Delivered", "Cancelled"]
+ORDER_STATUSES = ["Shipped", "Out for Delivery", "Delivered", "Cancelled"]
 
 
 def _is_admin(request):
@@ -36,13 +37,18 @@ def _is_admin(request):
 class CheckoutView(APIView):
     """
     POST /api/v1/orders/checkout/
-    Body: { "address_id": "...", "payment_mode": "Razorpay" }
+        Body: {
+            "address_id": "...",
+            "payment_mode": "Razorpay",
+            "buy_now_items": [{"product_id": "...", "quantity": 1}]  # optional
+        }
     """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         address_id   = request.data.get("address_id")
         payment_mode = request.data.get("payment_mode", "Razorpay")
+        buy_now_items = request.data.get("buy_now_items")
 
         if not address_id:
             return Response({"error": "address_id is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -52,34 +58,61 @@ class CheckoutView(APIView):
         if not addr_doc.exists or addr_doc.to_dict().get("user_id") != request.user.user_id:
             return Response({"error": "Address not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Get user's cart
-        cart_docs = (
-            db.collection(Collections.CARTS)
-            .where("user_id", "==", request.user.user_id)
-            .limit(1)
-            .get()
-        )
-        if not cart_docs:
-            return Response({"error": "Cart not found."}, status=status.HTTP_404_NOT_FOUND)
-        cart_id = cart_docs[0].id
+        cart_items = []
+        source_items = []
 
-        # Get cart items
-        cart_items = (
-            db.collection(Collections.CART_ITEMS)
-            .where("cart_id", "==", cart_id)
-            .get()
-        )
-        if not cart_items:
-            return Response({"error": "Cart is empty."}, status=status.HTTP_400_BAD_REQUEST)
+        # Buy Now mode: checkout only the provided items (do not include existing cart)
+        if buy_now_items is not None:
+            if not isinstance(buy_now_items, list) or not buy_now_items:
+                return Response({"error": "buy_now_items must be a non-empty list."}, status=status.HTTP_400_BAD_REQUEST)
+
+            for idx, raw_item in enumerate(buy_now_items):
+                if not isinstance(raw_item, dict):
+                    return Response({"error": f"buy_now_items[{idx}] must be an object."}, status=status.HTTP_400_BAD_REQUEST)
+                product_id = raw_item.get("product_id")
+                try:
+                    quantity = int(raw_item.get("quantity", 1))
+                except (TypeError, ValueError):
+                    return Response({"error": f"buy_now_items[{idx}].quantity must be a number."}, status=status.HTTP_400_BAD_REQUEST)
+                if not product_id:
+                    return Response({"error": f"buy_now_items[{idx}].product_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+                if quantity < 1:
+                    return Response({"error": f"buy_now_items[{idx}].quantity must be at least 1."}, status=status.HTTP_400_BAD_REQUEST)
+                source_items.append({"product_id": product_id, "quantity": quantity})
+        else:
+            # Standard mode: checkout from cart
+            cart_docs = (
+                db.collection(Collections.CARTS)
+                .where("user_id", "==", request.user.user_id)
+                .limit(1)
+                .get()
+            )
+            if not cart_docs:
+                return Response({"error": "Cart not found."}, status=status.HTTP_404_NOT_FOUND)
+            cart_id = cart_docs[0].id
+
+            cart_items = (
+                db.collection(Collections.CART_ITEMS)
+                .where("cart_id", "==", cart_id)
+                .get()
+            )
+            if not cart_items:
+                return Response({"error": "Cart is empty."}, status=status.HTTP_400_BAD_REQUEST)
+
+            for ci in cart_items:
+                ci_data = ci.to_dict()
+                source_items.append({
+                    "product_id": ci_data["product_id"],
+                    "quantity": ci_data["quantity"],
+                })
 
         # Validate stock and calculate total
         order_items_data = []
         total_amount     = 0.0
 
-        for ci in cart_items:
-            ci_data    = ci.to_dict()
-            product_id = ci_data["product_id"]
-            quantity   = ci_data["quantity"]
+        for item in source_items:
+            product_id = item["product_id"]
+            quantity = item["quantity"]
 
             prod_doc = db.collection(Collections.PRODUCTS).document(product_id).get()
             if not prod_doc.exists:
@@ -128,17 +161,18 @@ class CheckoutView(APIView):
                 "order_item_id": item_id,
                 "order_id":      order_id,
                 "product_id":    item["product_id"],
+                "product_name":  item["product_name"],
                 "quantity":      item["quantity"],
                 "price":         item["price"],
             })
-            # Decrement stock
+            # Decrement stock atomically without an additional read.
             prod_ref = db.collection(Collections.PRODUCTS).document(item["product_id"])
-            prod_snap = prod_ref.get().to_dict()
-            prod_ref.update({"stock": prod_snap["stock"] - item["quantity"]})
+            prod_ref.update({"stock": fb_firestore.Increment(-item["quantity"])})
 
-        # ── Clear Cart ─────────────────────────────────────────────────────
-        for ci in cart_items:
-            ci.reference.delete()
+        # ── Clear Cart only for cart checkout flow ────────────────────────
+        if buy_now_items is None:
+            for ci in cart_items:
+                ci.reference.delete()
 
         return Response({
             "message":      "Order placed successfully.",
@@ -268,8 +302,7 @@ class OrderCancelView(APIView):
         for item_doc in item_docs:
             item = item_doc.to_dict()
             prod_ref = db.collection(Collections.PRODUCTS).document(item["product_id"])
-            prod_snap = prod_ref.get().to_dict()
-            prod_ref.update({"stock": prod_snap["stock"] + item["quantity"]})
+            prod_ref.update({"stock": fb_firestore.Increment(item["quantity"])})
 
         db.collection(Collections.ORDERS).document(order_id).update(
             {"order_status": "Cancelled", "payment_status": "Refunded"}
